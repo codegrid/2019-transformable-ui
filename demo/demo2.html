@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>=^.^=</title>
+<style>
+.viewport {
+	position: relative;
+	width: 800px;
+	height: 600px;
+	background: #ccc;
+}
+
+.object {
+	position: absolute;
+	top: 0;
+	left:  0;
+	width: 100px;
+	height: 100px;
+	background: #000;
+}
+</style>
+</head>
+<body>
+
+<div class="viewport">
+
+	<div class="object"></div>
+
+</div>
+
+<script>
+const $object = document.querySelector( '.object' );
+// オブジェクトの位置を保存しておく。
+// ここでは簡略化のために0で決め打ちしているが、
+// getComputedStyle( 'transform' ) などで取得してもいい。
+const position = {
+	x: 0,
+	y: 0,
+};
+const isTouchEvent = ( event ) => 'TouchEvent' in window && event instanceof TouchEvent;
+
+let lastX = 0;
+let lastY = 0;
+
+// ドラッグ開始時のハンドラ
+const onPointerMoveStart = ( event ) => {
+
+	event.preventDefault();
+	const _event = isTouchEvent( event ) ? event.touches[ 0 ] : event;
+	// 対象の要素に対するoffsetXではなく、グローバル座標のx, yを使う。
+	// ドラッグ開始時の位置を保存する
+	lastX = _event.clientX;
+	lastY = _event.clientY;
+	
+
+	// 要素ではなく、document に対してハンドラをアタッチすることで、
+	// ブラウザの外にカーソルがでても動作を維持できる。
+	document.addEventListener( 'mousemove', onPointerMove, { passive: false } );
+	document.addEventListener( 'touchmove', onPointerMove, { passive: false } );
+	document.addEventListener( 'mouseup', onPointerMoveEnd );
+	document.addEventListener( 'touchend', onPointerMoveEnd );
+
+}
+
+// ドラッグ中のハンドラ
+const onPointerMove = ( event ) => {
+	
+	event.preventDefault();
+	const _event = isTouchEvent( event ) ? event.touches[ 0 ] : event;
+
+	// 直前の位置と現在の位置の差分を算出する
+	const deltaX = _event.clientX - lastX;
+	const deltaY = _event.clientY - lastY;
+	
+	// 差分を現在の位置に加算する
+	position.x += deltaX;
+	position.y += deltaY;
+
+	// CSSは単位が必須なので、文字列にして単位を付ける
+	$object.style.transform = `translate( ${ position.x }px, ${ position.y }px )`;
+
+	// 今回の座標を保存し、直後に改めて利用する
+	lastX = _event.clientX;
+	lastY = _event.clientY;
+
+}
+
+// ドラッグ終了時のハンドラ
+const onPointerMoveEnd = () => {
+
+	// ドラッグ操作完了時にイベントを剥がす
+	document.removeEventListener( 'mousemove', onPointerMove, { passive: false } );
+	document.removeEventListener( 'touchmove', onPointerMove, { passive: false } );
+	document.removeEventListener( 'mouseup', onPointerMoveEnd );
+	document.removeEventListener( 'touchend', onPointerMoveEnd );
+
+}
+
+$object.addEventListener( 'mousedown', onPointerMoveStart );
+$object.addEventListener( 'touchstart', onPointerMoveStart );
+
+</script>
+</body>
+</html>

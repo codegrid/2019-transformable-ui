@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>=^.^=</title>
+</head>
+<body>
+
+<canvas class="canvas"></canvas>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/5.1.5/pixi.js"></script>
+<script>
+let lastX;
+let lastY;
+let eventId = null;
+
+const renderer = new PIXI.Renderer( {
+	view: document.querySelector( '.canvas' ),
+	width: 800,
+	height: 400,
+	autoResize: true,
+	backgroundColor: 0xffffff,
+} );
+
+const stage = new PIXI.Container();
+
+const object = new PIXI.Graphics();
+object.beginFill( 0x000000 );
+object.drawRect( 0, 0, 100, 100 );
+object.position.set( 0, 0 );
+object.interactive = true;
+object.buttonMode = true;
+stage.addChild( object );
+
+renderer.render( stage );
+
+// ドラッグ開始時のハンドラ
+const onPointerMoveStart = ( event ) => {
+
+  eventId = event.data.identifier;
+
+  // 対象の要素に対するoffsetXではなく、グローバル座標のx, yを使う。
+  // ドラッグ開始時の位置を保存する
+  const localDelta = event.data.getLocalPosition( object.parent );
+  lastX = localDelta.x;
+	lastY = localDelta.y;
+
+  // 要素ではなく、document に対してハンドラをアタッチすることで、
+  // ブラウザの外にカーソルがでても動作を維持できる。
+  object.on( 'pointermove',      onPointerMove );
+  object.on( 'pointerup',        onPointerMoveEnd );
+  object.on( 'pointerupoutside', onPointerMoveEnd );
+
+}
+
+// ドラッグ中のハンドラ
+const onPointerMove = ( event ) => {
+
+  // すでに別の指でドラッグ中の場合（つまり、2本目の指）は、なにもしない。
+  if ( eventId !== event.data.identifier ) return;
+
+  const localDelta = event.data.getLocalPosition( object.parent );
+  const deltaX = localDelta.x - lastX;
+  const deltaY = localDelta.y - lastY;
+
+  object.position.x += deltaX;
+  object.position.y += deltaY;
+
+  lastX = localDelta.x;
+  lastY = localDelta.y;
+
+  renderer.render( stage );
+
+};
+
+// ドラッグ終了時のハンドラ
+const onPointerMoveEnd = ( event ) => {
+
+	// ドラッグ操作完了時にイベントを剥がす
+  object.off( 'pointermove',      onPointerMove );
+  object.off( 'pointerup',        onPointerMoveEnd );
+  object.off( 'pointerupoutside', onPointerMoveEnd );
+
+  renderer.render( stage );
+
+}
+
+object.on( 'pointerdown', onPointerMoveStart );
+
+</script>
+</body>
+</html>

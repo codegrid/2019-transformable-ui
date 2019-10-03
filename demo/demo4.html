@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>=^.^=</title>
+<style>
+.slider {
+	position: relative;
+	width: 200px;
+	height: 20px;
+	background: #ccc;
+}
+
+.slider__handle {
+	position: absolute;
+	top: 0;
+	left:  0;
+	width: 20px;
+	height: 20px;
+	background: #000;
+}
+</style>
+</head>
+<body>
+
+<div class="slider">
+	<div class="slider__handle"></div>
+</div>
+<div class="value"></div>
+
+<script>
+const $object = document.querySelector( '.slider__handle' );
+const $value = document.querySelector( '.value' );
+const position = {
+	x: 0,
+};
+
+const minX = 0;
+const maxX = 200 - 20;
+
+let lastX = 0;
+
+// ドラッグ開始時のハンドラ
+const onPointerMoveStart = ( event ) => {
+
+	event.preventDefault();
+	// 対象の要素に対するoffsetXではなく、グローバル座標のx, yを使う。
+	// ドラッグ開始時の位置を保存する
+	lastX = event.clientX;
+
+	// 要素ではなく、document に対してハンドラをアタッチすることで、
+	// ブラウザの外にカーソルがでても動作を維持できる。
+	document.addEventListener( 'mousemove', onPointerMove );
+	document.addEventListener( 'mouseup', onPointerMoveEnd );
+
+}
+
+// ドラッグ中のハンドラ
+const onPointerMove = ( event ) => {
+
+	event.preventDefault();
+
+	// 直前の位置と現在の位置の差分を算出する
+	const deltaX = event.clientX - lastX;
+	
+	// 差分を現在の位置に加算する
+	position.x += deltaX;
+	position.x = Math.min( maxX, position.x );
+	position.x = Math.max( minX, position.x );
+
+	// CSSは単位が必須なので、文字列にして単位を付ける
+	$object.style.transform = `translate( ${ position.x }px, 0 )`;
+	$value.innerHTML =( position.x / 180 ).toFixed( 2 );
+
+	// 今回の座標を保存し、直後に改めて利用する
+	lastX = event.clientX;
+
+}
+
+// ドラッグ終了時のハンドラ
+const onPointerMoveEnd = ( event ) => {
+
+	// ドラッグ操作完了時にイベントを剥がす
+	document.removeEventListener( 'mousemove', onPointerMove );
+	document.removeEventListener( 'mousemove', onPointerMoveEnd );
+
+}
+
+$object.addEventListener( 'mousedown', onPointerMoveStart );
+
+</script>
+</body>
+</html>
