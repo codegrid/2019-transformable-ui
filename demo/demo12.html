@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>=^.^=</title>
+</head>
+<body>
+
+<canvas class="canvas"></canvas>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/5.1.5/pixi.js"></script>
+<script>
+// 「1倍」での状態を取得できるようにしておく。
+const defaultSize = {
+	width: 100,
+	height: 100,
+};
+// 1倍での対角線の長さ
+const defaultDiagonalLength = Math.sqrt( defaultSize.width * defaultSize.width + defaultSize.height * defaultSize.height );
+// 1倍での対角線の長さの半分（つまり、中心からハンドルまでの距離）
+const defaultDiagonalLengthHalf = defaultDiagonalLength / 2;
+const scaleHandleSize = 10;
+const scaleHandleSizeHalf = scaleHandleSize / 2;
+
+let eventId = null;
+
+const renderer = new PIXI.Renderer( {
+	view: document.querySelector( '.canvas' ),
+	width: 800,
+	height: 400,
+	autoResize: true,
+	backgroundColor: 0xffffff,
+} );
+
+const stage = new PIXI.Container();
+
+const object = new PIXI.Graphics();
+object.beginFill( 0x000000 );
+object.drawRect( 0, 0, defaultSize.width, defaultSize.height );
+object.pivot.set( defaultSize.width / 2, defaultSize.height / 2 );
+object.position.set( 100, 100 );
+stage.addChild( object );
+
+const objectUI = new PIXI.Container();
+objectUI.position.copyFrom( object.position );
+stage.addChild( objectUI );
+
+const scaleHandleTopLeft = new PIXI.Graphics();
+scaleHandleTopLeft.lineStyle( 1, 0x6666ff );
+scaleHandleTopLeft.beginFill( 0xffffff );
+scaleHandleTopLeft.drawRect( 0, 0, scaleHandleSize, scaleHandleSize );
+scaleHandleTopLeft.position.set( - 55, - 55 );
+scaleHandleTopLeft.interactive = true;
+scaleHandleTopLeft.buttonMode = true;
+objectUI.addChild( scaleHandleTopLeft );
+
+renderer.render( stage );
+
+// ドラッグ開始時のハンドラ
+const onPointerMoveStart = ( event ) => {
+
+	eventId = event.data.identifier;
+
+	// 要素ではなく、document に対してハンドラをアタッチすることで、
+	// ブラウザの外にカーソルがでても動作を維持できる。
+	scaleHandleTopLeft.on( 'pointermove',      onPointerMove );
+	scaleHandleTopLeft.on( 'pointerup',        onPointerMoveEnd );
+	scaleHandleTopLeft.on( 'pointerupoutside', onPointerMoveEnd );
+
+}
+
+// ドラッグ中のハンドラ
+const onPointerMove = ( event ) => {
+
+	// すでに別の指でドラッグ中の場合（つまり、2本目の指）は、なにもしない。
+	if ( eventId !== event.data.identifier ) return;
+
+	const handlePositionLocal = event.data.getLocalPosition( object.parent );
+
+	// ドラッグ位置から中心までの距離を求める。
+	// この値は拡大されてできる矩形の対角線の半分と同じ値になる。
+	const diagonalLengthHalf = Math.sqrt( handlePositionLocal.x * handlePositionLocal.x + handlePositionLocal.y * handlePositionLocal.y );
+
+	// 「1倍時の対角線の半分」と先ほど求めた「対角線の半分」の比が拡大率となる。
+	// HTMLとは座標系の方向が違うため、逆転させる
+	const scale = 1 + ( 1 - diagonalLengthHalf / defaultDiagonalLengthHalf );
+	object.scale.set( scale, scale );
+
+	// ハンドルの位置が矩形の角に来るように、ハンドルも合わせて動かす
+	const scaledWidth = defaultSize.width * scale;
+	const scaledHeight = defaultSize.height * scale;
+	scaleHandleTopLeft.position.x = ( scaledWidth  / 2 + scaleHandleSizeHalf ) * - 1;
+	scaleHandleTopLeft.position.y = ( scaledHeight / 2 + scaleHandleSizeHalf ) * - 1;
+
+	renderer.render( stage );
+
+};
+
+// ドラッグ終了時のハンドラ
+const onPointerMoveEnd = ( event ) => {
+
+	// ドラッグ操作完了時にイベントを剥がす
+	scaleHandleTopLeft.off( 'pointermove',      onPointerMove );
+	scaleHandleTopLeft.off( 'pointerup',        onPointerMoveEnd );
+	scaleHandleTopLeft.off( 'pointerupoutside', onPointerMoveEnd );
+
+}
+
+scaleHandleTopLeft.on( 'pointerdown', onPointerMoveStart );
+
+</script>
+</body>
+</html>

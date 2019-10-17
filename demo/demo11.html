@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>=^.^=</title>
+<style>
+.viewport {
+	position: relative;
+	width: 800px;
+	height: 600px;
+	background: #ccc;
+}
+
+.object {
+	position: absolute;
+	left: -50px; /* widthの半分 * -1 */
+	top: -50px; /* heightの半分 * -1 */
+	width: 100px;
+	height: 100px;
+	background: #000;
+	transform: translate( 100px, 100px );
+	transform-origin: 50% 50%;
+}
+
+.objectUI {
+	position: absolute;
+	top: 0;
+	left: 0;
+	transform: translate( 100px, 100px ); /* .objectと同じ位置に配置する */
+}
+
+.scaleHandleTopLeft {
+	box-sizing: border-box;
+	position: absolute;
+	width: 10px;
+	height: 10px;
+	border: 1px solid #66f;
+	background: #fff;
+}
+
+.scaleHandleTopLeft {
+	left: -55px; /* ( (.object の widthの半分) + (.scaleHandleTopLeftのwidthの半分) ) * -1 */
+	top: -55px; /* ( (.object の heightの半分) + (.scaleHandleTopLeftのheightの半分) ) * -1 */
+}
+</style>
+</head>
+<body>
+
+<div class="viewport">
+	<div class="object"></div>
+	<div class="objectUI">
+		<!--
+			.objectUI は UI の入れ物専用として .object とは切り離して用意する。
+			ただし同じ位置に表示する
+		-->
+		<div class="scaleHandleTopLeft"></div>
+	</div>
+</div>
+
+<script>
+const $object = document.querySelector( '.object' );
+const $scaleHandleTopLeft = document.querySelector( '.scaleHandleTopLeft' );
+
+// 「1倍」での状態を取得できるようにしておく。
+const defaultSize = {
+	width: 100,
+	height: 100,
+};
+// 1倍での対角線の長さ
+const defaultDiagonalLength = Math.sqrt( defaultSize.width * defaultSize.width + defaultSize.height * defaultSize.height );
+// 1倍での対角線の長さの半分（つまり、中心からハンドルまでの距離）
+const defaultDiagonalLengthHalf = defaultDiagonalLength / 2;
+const scaleHandleSize = 10;
+const scaleHandleSizeHalf = scaleHandleSize / 2;
+
+// オブジェクトの位置（今回は変更しない）
+const position = {
+	x: 100,
+	y: 100,
+};
+// オブジェクトの拡大率
+let scale = 1;
+
+const isTouchEvent = ( event ) => 'TouchEvent' in window && event instanceof TouchEvent;
+
+// ドラッグ開始時のハンドラ
+const onScaleMoveStart = ( event ) => {
+
+	event.preventDefault();
+	onScaleMoveEnd();
+
+	// 前回と同様に、「ドラッグ中」を起動する
+	document.addEventListener( 'mousemove', onScaleMove, { passive: false } );
+	document.addEventListener( 'touchmove', onScaleMove, { passive: false } ); // <- 追加した行
+	document.addEventListener( 'mouseup', onScaleMoveEnd );
+	document.addEventListener( 'touchend', onScaleMoveEnd ); // <- 追加した行
+
+}
+
+// ドラッグ中のハンドラ
+const onScaleMove = ( event ) => {
+
+	event.preventDefault();
+
+	const _event = isTouchEvent( event ) ? event.touches[ 0 ] : event;
+
+	// オブジェクトの中心のワールド座標を求める
+	// （カーソルの位置もワールド座標で取得するため）
+	const objectRect = $object.getBoundingClientRect();
+	const objectCenterX = objectRect.x + defaultSize.width  / 2 * scale;
+	const objectCenterY = objectRect.y + defaultSize.height / 2 * scale;
+
+	// 「ドラッグしたハンドルの位置」から、オブジェクトの中心までの距離を求める
+	// オブジェクトの中心座標から現在のカーソル位置を引けば求まる
+	const distanceToCenterX = objectCenterX - _event.clientX;
+	const distanceToCenterY = objectCenterY - _event.clientY;
+	// 「ドラッグしたハンドルの位置」からオブジェクトの中心までの直線距離を求める。
+	// この値は拡大されてできる矩形の対角線の半分と同じ値になる。
+	const diagonalLengthHalf = Math.sqrt( distanceToCenterX * distanceToCenterX + distanceToCenterY * distanceToCenterY );
+
+	// 「1倍時の対角線の半分」と先ほど求めた「対角線の半分」の比が拡大率となる。
+	scale = diagonalLengthHalf / defaultDiagonalLengthHalf;
+
+	// CSSは単位が必須なので、文字列にして単位を付ける
+	$object.style.transform = `translate( ${ position.x }px, ${ position.y }px ) scale( ${ scale } )`;
+
+	// ハンドルの位置が矩形の角に来るように、ハンドルも合わせて動かす
+	const scaledWidth  = defaultSize.width  * scale;
+	const scaledHeight = defaultSize.height * scale;
+	$scaleHandleTopLeft.style.left = `${ ( scaledWidth  / 2 + scaleHandleSizeHalf ) * - 1 }px`;
+	$scaleHandleTopLeft.style.top  = `${ ( scaledHeight / 2 + scaleHandleSizeHalf ) * - 1 }px`;
+
+}
+
+// ドラッグ終了時のハンドラ
+const onScaleMoveEnd = () => {
+
+	// ドラッグ操作完了時にイベントを剥がす
+	document.removeEventListener( 'mousemove', onScaleMove );
+	document.removeEventListener( 'touchmove', onScaleMove ); // <- 追加した行
+	document.removeEventListener( 'mouseup', onScaleMoveEnd );
+	document.removeEventListener( 'touchend', onScaleMoveEnd ); // <- 追加した行
+
+}
+
+$scaleHandleTopLeft.addEventListener( 'mousedown', onScaleMoveStart );
+$scaleHandleTopLeft.addEventListener( 'touchstart', onScaleMoveStart ); // <- 追加した行
+
+</script>
+</body>
+</html>
