@@ -60,6 +60,7 @@ renderer.render( stage );
 // ドラッグ開始時のハンドラ
 const onPointerMoveStart = ( event ) => {
 
+	onPointerMoveEnd();
 	eventId = event.data.identifier;
 
 	// 要素ではなく、document に対してハンドラをアタッチすることで、

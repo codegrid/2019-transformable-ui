@@ -59,7 +59,6 @@
 const $object = document.querySelector( '.object' );
 const $scaleHandleTopLeft = document.querySelector( '.scaleHandleTopLeft' );
 
-
 // 「1倍」での状態を取得できるようにしておく。
 const defaultSize = {
 	width: 100,
@@ -72,13 +71,15 @@ const defaultDiagonalLengthHalf = defaultDiagonalLength / 2;
 const scaleHandleSize = 10;
 const scaleHandleSizeHalf = scaleHandleSize / 2;
 
-// オブジェクトの位置（今回は変更しない）
-const position = {
-	x: 100,
-	y: 100,
+// オブジェクトの位置と拡大率
+// （ただし、今回は位置は変更しない）
+const state = {
+  position: {
+    x: 100,
+    y: 100,
+  },
+  scale: 1,
 };
-// オブジェクトの拡大率
-let scale = 1;
 
 // ドラッグ開始時のハンドラ
 const onScaleMoveStart = ( event ) => {
@@ -98,8 +99,8 @@ const onScaleMove = ( event ) => {
 	// オブジェクトの中心のワールド座標を求める
 	// （カーソルの位置もワールド座標で取得するため）
 	const objectRect = $object.getBoundingClientRect();
-	const objectCenterX = objectRect.x + defaultSize.width  / 2 * scale;
-	const objectCenterY = objectRect.y + defaultSize.height / 2 * scale;
+	const objectCenterX = objectRect.x + defaultSize.width  / 2 * state.scale;
+	const objectCenterY = objectRect.y + defaultSize.height / 2 * state.scale;
 
 	// 「ドラッグしたハンドルの位置」から、オブジェクトの中心までの距離を求める
 	// オブジェクトの中心座標から現在のカーソル位置を引けば求まる
@@ -110,10 +111,10 @@ const onScaleMove = ( event ) => {
 	const diagonalLengthHalf = Math.sqrt( distanceToCenterX * distanceToCenterX + distanceToCenterY * distanceToCenterY );
 
 	// 「1倍時の対角線の半分」と先ほど求めた「対角線の半分」の比が拡大率となる。
-	scale = diagonalLengthHalf / defaultDiagonalLengthHalf;
+	state.scale = diagonalLengthHalf / defaultDiagonalLengthHalf;
 
 	// CSSは単位が必須なので、文字列にして単位を付ける
-	$object.style.transform = `translate( ${ position.x }px, ${ position.y }px ) scale( ${ scale } )`;
+	$object.style.transform = `translate( ${ state.position.x }px, ${ state.position.y }px ) scale( ${ state.scale } )`;
 
 }
 
