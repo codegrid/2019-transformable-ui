@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>=^.^=</title>
+<style>
+.viewport {
+	position: relative;
+	width: 800px;
+	height: 600px;
+	background: #ccc;
+}
+
+.object {
+	position: absolute;
+	left: -50px; /* widthの半分 * -1 */
+	top: -50px; /* heightの半分 * -1 */
+	width: 100px;
+	height: 100px;
+	background: #000;
+	transform: translate( 100px, 100px );
+	transform-origin: 50% 50%;
+}
+
+.objectUI {
+	position: absolute;
+	top: 0;
+	left: 0;
+	transform: translate( 100px, 100px ); /* .objectと同じ位置に配置する */
+}
+
+.rotateHandle {
+	box-sizing: border-box;
+	position: absolute;
+	top: -100px;
+	left: calc( 50% - 10px );
+	width: 20px;
+	height: 20px;
+	border: 1px solid #66f;
+	border-radius: 10px;
+	background: #fff;
+}
+
+</style>
+</head>
+<body>
+
+<div class="viewport">
+	<div class="object"></div>
+	<div class="objectUI">
+		<!--
+			.objectUI は UI の入れ物専用として .object とは切り離して用意する。
+			ただし同じ位置に表示する
+		-->
+		<div class="rotateHandle"></div>
+	</div>
+</div>
+
+<script>
+const $viewport = document.querySelector( '.viewport' );
+const $object = $viewport.querySelector( '.object' );
+const $objectUI = $viewport.querySelector( '.objectUI' );
+const $rotateHandle = $viewport.querySelector( '.rotateHandle' );
+
+// オブジェクトの大きさを取得できるようにしておく。
+const defaultSize = {
+	width: 100,
+	height: 100,
+};
+
+// オブジェクトの位置と回転角度(ラジアン)
+// （ただし、今回は位置は変更しない）
+const state = {
+	position: {
+		x: 100,
+		y: 100,
+	},
+	rotation: 0,
+};
+
+let dragStartRotation = state.rotation;
+// ドラッグ開始時のハンドラ
+const onRotateMoveStart = ( event ) => {
+
+	event.preventDefault();
+
+	// オブジェクトの中心のワールド座標を求める
+	// （カーソルの位置もワールド座標で取得するため）
+	const viewportRect = $viewport.getBoundingClientRect();
+	const pointerX = event.clientX - viewportRect.x;
+	const pointerY = event.clientY - viewportRect.y;
+
+	// オブジェクトの中心（0, 0）としたときの、カーソルの座標を求める
+	const deltaX = state.position.x - pointerX;
+	const deltaY = state.position.y - pointerY;
+	// カーソルのx, y座標からatan2で角度を求める。
+	// これにより、オブジェクトとカーソルの角度がわかる
+	dragStartRotation = state.rotation - Math.atan2( deltaY, deltaX );
+
+	// 「ドラッグ中」を起動する
+	document.addEventListener( 'mousemove', onRotateMove, { passive: false } );
+
+}
+
+// ドラッグ中のハンドラ
+const onRotateMove = ( event ) => {
+
+	event.preventDefault();
+
+	// viewport内でのカーソルの座標を求める
+	// ウインドウがスクロールされていたり、viewportのmarginなどでオフセットがあることなどを考慮する
+	const viewportRect = $viewport.getBoundingClientRect();
+	const pointerX = event.clientX - viewportRect.x;
+	const pointerY = event.clientY - viewportRect.y;
+
+	// 「ドラッグしたハンドルの位置」から、オブジェクトの中心までの距離を求める
+	// オブジェクトの中心座標から現在のカーソル位置を引けば求まる
+	const deltaX = state.position.x - pointerX;
+	const deltaY = state.position.y - pointerY;
+	const theta = Math.atan2( deltaY, deltaX );
+	// ラジアンに「180 / π」を掛けると度になる
+	console.log( `${theta * 180 / Math.PI}度` );
+	state.rotation = theta + dragStartRotation;
+
+	// CSSは単位が必須なので、文字列にして単位を付ける
+	$object.style.transform = `translate( ${ state.position.x }px, ${ state.position.y }px ) rotate( ${ state.rotation }rad )`;
+	$objectUI.style.transform = $object.style.transform;
+
+}
+
+$rotateHandle.addEventListener( 'mousedown', onRotateMoveStart );
+
+</script>
+</body>
+</html>
