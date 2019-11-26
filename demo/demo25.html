@@ -296,9 +296,9 @@ const onRotateMoveStart = ( event ) => {
 
 	// 「ドラッグ中」を起動する
 	document.addEventListener( 'mousemove', onRotateMove, { passive: false } );
-	document.addEventListener( 'touchmove', onRotateMove, { passive: false } ); // <- 追加した行
+	document.addEventListener( 'touchmove', onRotateMove, { passive: false } ); 
 	document.addEventListener( 'mouseup', onRotateMoveEnd );
-	document.addEventListener( 'touchend', onRotateMoveEnd ); // <- 追加した行
+	document.addEventListener( 'touchend', onRotateMoveEnd ); 
 
 }
 
@@ -331,23 +331,23 @@ const onRotateMoveEnd = () => {
 
 	// ドラッグ操作完了時にイベントを剥がす
 	document.removeEventListener( 'mousemove', onRotateMove, { passive: false } );
-	document.removeEventListener( 'touchmove', onRotateMove, { passive: false } ); // <- 追加した行
+	document.removeEventListener( 'touchmove', onRotateMove, { passive: false } );
 	document.removeEventListener( 'mouseup', onRotateMoveEnd );
-	document.removeEventListener( 'touchend', onRotateMoveEnd ); // <- 追加した行
+	document.removeEventListener( 'touchend', onRotateMoveEnd );
 
 }
 
 $scaleHandleTopLeft.addEventListener( 'mousedown', onScaleMoveStart );
-$scaleHandleTopLeft.addEventListener( 'touchstart', onScaleMoveStart ); // <- 追加した行
+$scaleHandleTopLeft.addEventListener( 'touchstart', onScaleMoveStart );
 $scaleHandleTopRight.addEventListener( 'mousedown', onScaleMoveStart );
-$scaleHandleTopRight.addEventListener( 'touchstart', onScaleMoveStart ); // <- 追加した行
+$scaleHandleTopRight.addEventListener( 'touchstart', onScaleMoveStart );
 $scaleHandleBottomLeft.addEventListener( 'mousedown', onScaleMoveStart );
-$scaleHandleBottomLeft.addEventListener( 'touchstart', onScaleMoveStart ); // <- 追加した行
+$scaleHandleBottomLeft.addEventListener( 'touchstart', onScaleMoveStart );
 $scaleHandleBottomRight.addEventListener( 'mousedown', onScaleMoveStart );
-$scaleHandleBottomRight.addEventListener( 'touchstart', onScaleMoveStart ); // <- 追加した行
+$scaleHandleBottomRight.addEventListener( 'touchstart', onScaleMoveStart );
 
 $rotateHandle.addEventListener( 'mousedown', onRotateMoveStart );
-$scaleHandleTopLeft.addEventListener( 'touchstart', onScaleMoveStart ); // <- 追加した行
+$scaleHandleTopLeft.addEventListener( 'touchstart', onScaleMoveStart );
 
 </script>
 </body>
